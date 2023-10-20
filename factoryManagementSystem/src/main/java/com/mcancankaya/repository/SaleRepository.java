@@ -1,6 +1,7 @@
 package com.mcancankaya.repository;
 
 import com.mcancankaya.entities.concretes.Sale;
+import com.mcancankaya.entities.concretes.SaleDetail;
 import com.mcancankaya.enums.SaleStatus;
 
 import java.sql.*;
@@ -57,6 +58,24 @@ public class SaleRepository {
         }
     }
 
+    public void update(Sale sale) {
+        try {
+            String query = "UPDATE sales SET date = ?, vehicle_id = ?, quantity = ? , status = ? WHERE id = ?";
+            statement = connection.prepareStatement(query);
+            statement.setDate(1, Date.valueOf(sale.getSaleDate()));
+            statement.setInt(2, sale.getVehicle_id());
+            statement.setInt(3, sale.getQuantity());
+            statement.setString(4, sale.getStatus().name());
+            statement.setInt(5, sale.getId());
+            int updateEffectedRow = statement.executeUpdate();
+            if (updateEffectedRow > 0)
+                System.out.println("Sale is update.");
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
     public void updateSalesQuantityById(int saleId, int newSaleQuantity) {
         try {
             String query = "UPDATE sales SET quantity = ? WHERE id = ?";
@@ -88,6 +107,39 @@ public class SaleRepository {
         return sales;
     }
 
+    public List<SaleDetail> getSaleDetails() {
+        List<SaleDetail> saleDetails = new ArrayList<>();
+        try {
+            String query = "SELECT s.*, v.id, v.model, v.year FROM sales s JOIN vehicles v ON v.id = s.vehicle_id ";
+            statement = connection.prepareStatement(query);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                SaleDetail saleDetail = mappingResultSetWithDetail(resultSet);
+                saleDetails.add(saleDetail);
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return saleDetails;
+    }
+
+    public Sale getSaleById(int id) {
+        Sale sale = null;
+        try {
+            String query = "SELECT * FROM sales WHERE id = ?";
+            statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next())
+                sale = mappingResultSet(resultSet);
+            return sale;
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return sale;
+    }
+
     private Sale mappingResultSet(ResultSet resultSet) {
         Sale sale = null;
         try {
@@ -97,5 +149,22 @@ public class SaleRepository {
             System.err.println(e.getMessage());
         }
         return sale;
+    }
+
+    private SaleDetail mappingResultSetWithDetail(ResultSet resultSet) {
+        SaleDetail saleDetail = null;
+        try {
+            saleDetail = new SaleDetail();
+            saleDetail.setSaleId(resultSet.getInt("id"));
+            saleDetail.setVehicleId(resultSet.getInt("vehicle_id"));
+            saleDetail.setSalesDate(resultSet.getDate("date").toLocalDate());
+            saleDetail.setQuantity(resultSet.getInt("quantity"));
+            saleDetail.setVehicleModel(resultSet.getString("model"));
+            saleDetail.setVehicleYear(resultSet.getInt("year"));
+            saleDetail.setStatus(resultSet.getString("status"));
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return saleDetail;
     }
 }

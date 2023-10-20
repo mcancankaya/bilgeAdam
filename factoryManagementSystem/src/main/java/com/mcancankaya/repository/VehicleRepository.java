@@ -1,6 +1,7 @@
 package com.mcancankaya.repository;
 
 import com.mcancankaya.entities.abstracts.AbstractVehicle;
+import com.mcancankaya.entities.concretes.SaleDetail;
 
 import javax.swing.*;
 import javax.xml.transform.Result;
